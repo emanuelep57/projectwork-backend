@@ -1,7 +1,6 @@
 import cloudinary
 import cloudinary.uploader
 from flask import current_app
-import io
 
 
 def configure_cloudinary():

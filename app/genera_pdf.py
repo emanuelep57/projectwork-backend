@@ -1,164 +1,144 @@
-import os
-from flask import Blueprint, current_app
-from flask_login import current_user
-import requests
 import io
 import qrcode
+import requests
+from flask import current_app
+from flask_login import current_user
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import PageBreak
 from reportlab.lib.units import inch
 from reportlab.lib.colors import black
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Image as ReportlabImage
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Image as ReportlabImage, PageBreak
 from reportlab.lib.enums import TA_CENTER
 
-def create_pdf_styles():
-    """Create custom PDF styles for the ticket."""
-    styles = getSampleStyleSheet()
+URL_LOGO = "https://res.cloudinary.com/dj5udxse6/image/upload/v1738162706/logo.webp"
 
-    # Only add the style if it doesn't already exist
-    if 'CustomTitle' not in styles:
-        styles.add(ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
+
+def crea_stili_pdf():
+
+    # documentazione sul paragraphstyle e sul samplestylesheet:
+    # https://docs.reportlab.com/reportlab/userguide/ch6_paragraphs/
+    stili = getSampleStyleSheet()
+
+    if 'TitoloCustom' not in stili:
+        stili.add(ParagraphStyle(
+            'TitoloCustom',
+            parent=stili['Heading1'],
             fontSize=16,
             textColor=black,
             alignment=TA_CENTER
         ))
 
-    if 'CustomSubtitle' not in styles:
-        styles.add(ParagraphStyle(
-            'CustomSubtitle',
-            parent=styles['Normal'],
+    if 'SottotitoloCustom' not in stili:
+        stili.add(ParagraphStyle(
+            'SottotitoloCustom',
+            parent=stili['Normal'],
             fontSize=12,
             textColor=black,
             alignment=TA_CENTER
         ))
 
-    return styles
+    return stili
 
 
-def generate_qr_code(data, box_size=10):
-    """Generate a QR code for the ticket."""
+def genera_qr_code(dati):
+    # il codice per generare il qr l'ho trovato presso la documentazione ufficiale
+    # https://pypi.org/project/qrcode/
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=box_size,
+        box_size=10,
         border=4
     )
-    qr.add_data(data)
+
+    qr.add_data(dati)
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="black", back_color="white")
 
-    img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format='PNG')
-    img_byte_arr.seek(0)
-    return img_byte_arr
+    # lo salvo in memoria
+    buffer_img = io.BytesIO()
+    img.save(buffer_img, format='PNG')
+    buffer_img.seek(0)
+    return buffer_img
 
 
-def download_image(url):
-    """Download image from URL and return as bytes."""
+# scarico la copertina e salvo anche quella in memoria
+def scarica_immagine(url):
     try:
         response = requests.get(url)
         response.raise_for_status()
         return io.BytesIO(response.content)
-    except Exception as e:
-        current_app.logger.error(f"Failed to download image: {e}")
+    except requests.RequestException as e:
+        current_app.logger.error(f"Errore nel download dell'immagine: {e}")
         return None
 
 
-def genera_biglietto_pdf(tickets_info, order_id):
-    """
-    Generate PDF for multiple tickets in a single document.
+def genera_biglietto_pdf(info_biglietti, id_ordine):
 
-    Args:
-        tickets_info (list): List of tuples containing ticket details.
-        order_id (int): ID of the order for the title.
+    if not info_biglietti:
+        raise ValueError("Impossibile generare il PDF: nessun biglietto disponibile.")
 
-    Returns:
-        BytesIO: PDF buffer.
-    """
-    # Create PDF in memory
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    buffer_pdf = io.BytesIO()
+    documento = SimpleDocTemplate(buffer_pdf, pagesize=letter)
+    stili = crea_stili_pdf()
+    contenuto = []
 
-    # Create styles
-    styles = create_pdf_styles()
+    for biglietto, film, proiezione, sala, posto in info_biglietti:
+        contenuto_pagina = []
 
-    # Collect all story elements
-    story = []
-
-    # Logo path (ensure this path is correct)
-    logo_path = "/home/emanuele/project_work/react-shadcn/public/images/logo_pegasus.webp"
-
-    print(f"Tickets info length: {len(tickets_info)}")
-    for item in tickets_info:
-        print(f"Ticket: {item[0].id}, Film: {item[1].titolo}")
-
-    if not tickets_info:
-        current_app.logger.error("No ticket information provided")
-        raise ValueError("Empty ticket information")
-
-    for ticket, film, proiezione, sala, posto in tickets_info:
-        page_content = []
-
-        # Add logo if exists
-        if os.path.exists(logo_path):
+    # Scarico il logo e lo aggiungo
+        logo_bytes = scarica_immagine(URL_LOGO)
+        if logo_bytes:
             try:
-                logo = ReportlabImage(logo_path, width=1.5 * inch, height=1.5 * inch)
+                logo = ReportlabImage(logo_bytes, width=1.5 * inch, height=1.5 * inch)
                 logo.hAlign = 'RIGHT'
-                page_content.append(logo)
+                contenuto_pagina.append(logo)
             except Exception as e:
-                current_app.logger.error(f"Error loading logo: {e}")
+                current_app.logger.error(f"Errore nel caricamento del logo: {e}")
 
-        # Add film poster
-        if film.url_copertina:
-            poster_image = download_image(film.url_copertina)
-            if poster_image:
-                try:
-                    poster = ReportlabImage(poster_image, width=3 * inch, height=4 * inch)
-                    poster.hAlign = 'CENTER'
-                    page_content.append(poster)
-                except Exception as e:
-                    current_app.logger.error(f"Error loading poster image: {e}")
+        # Stessa cosa con la copertina del film del film
+        film_poster = scarica_immagine(film.url_copertina)
+        if film_poster:
+            try:
+                poster = ReportlabImage(film_poster, width=3 * inch, height=4 * inch)
+                poster.hAlign = 'CENTER'
+                contenuto_pagina.append(poster)
+            except Exception as e:
+                current_app.logger.error(f"Errore nel caricamento della locandina: {e}")
 
-        # Generate QR code
-        qr_data = f"Ticket ID: {ticket.id}, Film: {film.titolo}, Date: {proiezione.data_ora}"
-        qr_img = generate_qr_code(qr_data)
-        qr_image = ReportlabImage(qr_img, width=1.5 * inch, height=1.5 * inch)
-        qr_image.hAlign = 'CENTER'
+        # Generazione del codice QR
+        dati_qr = f"ID Biglietto: {biglietto.id}, Film: {film.titolo}, Data: {proiezione.data_ora}"
+        qr_img = genera_qr_code(dati_qr)
+        immagine_qr = ReportlabImage(qr_img, width=1.5 * inch, height=1.5 * inch)
+        immagine_qr.hAlign = 'CENTER'
 
-        # Add ticket details
-        guest_name = f"{ticket.nome_ospite or current_user.nome} {ticket.cognome_ospite or current_user.cognome}"
+        # Siccome il primo biglietto non è mai dell'ospite, sarà sempe dell'utente
+        # Per quelli che seguono invece se ci sono ospiti, prenderà prima loro.
+        nome_ospite = f"{biglietto.nome_ospite or current_user.nome} {biglietto.cognome_ospite or current_user.cognome}"
 
-        page_content.extend([
-            Paragraph(f"Order ID: {order_id} - CINEMA PEGASUS", styles['CustomTitle']),
-            Paragraph(f"Film: {film.titolo}", styles['CustomSubtitle']),
-            Paragraph(f"Date: {proiezione.data_ora.strftime('%d/%m/%Y')}", styles['CustomSubtitle']),
-            Paragraph(f"Time: {proiezione.data_ora.strftime('%H:%M')}", styles['CustomSubtitle']),
-            Paragraph(f"Room: {sala.nome}", styles['CustomSubtitle']),
-            qr_image,
-            Paragraph(f"Name: {guest_name}", styles['CustomSubtitle']),
-            Paragraph(f"Seat: {posto.fila}{posto.numero}", styles['CustomSubtitle']),
+        # Aggiunta dei dettagli del biglietto
+        contenuto_pagina.extend([
+            Paragraph(f"Ordine ID: {id_ordine} - CINEMA PEGASUS", stili['TitoloCustom']),
+            Paragraph(f"Film: {film.titolo}", stili['SottotitoloCustom']),
+            Paragraph(f"Data: {proiezione.data_ora.strftime('%d/%m/%Y')}", stili['SottotitoloCustom']),
+            Paragraph(f"Ora: {proiezione.data_ora.strftime('%H:%M')}", stili['SottotitoloCustom']),
+            Paragraph(f"Sala: {sala.nome}", stili['SottotitoloCustom']),
+            immagine_qr,
+            Paragraph(f"Nome: {nome_ospite}", stili['SottotitoloCustom']),
+            Paragraph(f"Posto: {posto.fila}{posto.numero}", stili['SottotitoloCustom']),
         ])
 
-        # Add page content to the story
-        story.extend(page_content)
-        story.append(PageBreak())
+        # Aggiunta alla contenuto del documento
+        contenuto.extend(contenuto_pagina)
+        contenuto.append(PageBreak())
 
-    # Build PDF
+    # Generazione del PDF
     try:
-        doc.build(story)
+        documento.build(contenuto)
     except Exception as e:
-        current_app.logger.error(f"Error building PDF: {e}")
+        current_app.logger.error(f"Errore nella generazione del PDF: {e}")
+        raise ValueError("Errore durante la creazione del PDF.")
 
-    buffer.seek(0)
-    buffer_content = buffer.getvalue()
-    current_app.logger.info(f"PDF Buffer Size: {len(buffer_content)} bytes")
-
-    if len(buffer_content) == 0:
-        current_app.logger.error("Generated PDF is empty")
-        raise ValueError("PDF generation failed - empty document")
-
-    return buffer
+    #seek riporta il cursore del buffer all'inizio.
+    buffer_pdf.seek(0)
+    return buffer_pdf

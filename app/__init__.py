@@ -6,20 +6,21 @@ from flask_login import LoginManager
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-# Load environment variables
+# caricamento del file dotenv
 load_dotenv()
 
-# Initialize extensions
+# inizializzo le estensioni
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+
 
 def create_app():
     app = Flask(__name__)
 
     # App configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-secret-key')
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # CORS configuration
@@ -33,12 +34,12 @@ def create_app():
         }
     })
 
-    # Initialize extensions
+    # passo l'istanza alle varie estensioni
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
 
-    # Register blueprints
+    # Registrazione blueprints
     from app.routes import autenticazione, film, proiezioni, biglietti, posti, ordini
     app.register_blueprint(autenticazione.bp, url_prefix='/api/auth')
     app.register_blueprint(film.bp, url_prefix='/api/films')
