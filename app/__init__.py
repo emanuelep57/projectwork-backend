@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from flask_restx import Api
 import json
 from decimal import Decimal
-from app.routes import autenticazione, film, proiezioni, biglietti, posti, ordini
+
 
 # caricamento del file dotenv
 load_dotenv()
@@ -53,6 +53,8 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+
+    from app.routes import autenticazione, film, proiezioni, biglietti, posti, ordini
 
     # registrazione API
     api.add_namespace(autenticazione.auth_ns, path="/api/auth")
