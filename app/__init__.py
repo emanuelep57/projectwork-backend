@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from flask_restx import Api
 import json
 from decimal import Decimal
+from app.routes import autenticazione, film, proiezioni, biglietti, posti, ordini
 
 # caricamento del file dotenv
 load_dotenv()
@@ -53,15 +54,6 @@ def create_app():
     migrate.init_app(app, db)
     login_manager.init_app(app)
 
-    # Registrazione blueprints
-    from app.routes import autenticazione, film, proiezioni, biglietti, posti, ordini
-    app.register_blueprint(autenticazione.bp, url_prefix='/api/auth')
-    app.register_blueprint(film.bp, url_prefix='/api/films')
-    app.register_blueprint(proiezioni.bp, url_prefix='/api/proiezioni')
-    app.register_blueprint(biglietti.bp, url_prefix='/api/biglietti')
-    app.register_blueprint(ordini.bp, url_prefix='/api/ordini')
-    app.register_blueprint(posti.bp, url_prefix='/api/posti')
-
     # registrazione API
     api.add_namespace(autenticazione.auth_ns, path="/api/auth")
     api.add_namespace(film.film_ns, path='/api/films')
@@ -69,7 +61,6 @@ def create_app():
     api.add_namespace(biglietti.biglietti_ns, path='/api/biglietti')
     api.add_namespace(ordini.ordini_ns, path='/api/ordini')
     api.add_namespace(posti.posti_ns, path='/api/posti')
-
 
     return app
 

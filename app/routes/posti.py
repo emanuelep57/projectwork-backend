@@ -1,8 +1,7 @@
-from flask import Blueprint
 from flask_restx import Namespace, Resource, fields
 from ..services.posto_service import PostoService
 
-bp = Blueprint('posti', __name__)
+
 posti_ns = Namespace('posti', description='Operazioni sui posti delle proiezioni')
 
 # Definizione dei modelli per la documentazione openAPI

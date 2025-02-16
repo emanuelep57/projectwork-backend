@@ -1,13 +1,12 @@
 from flask_restx import Namespace, Resource, fields
-from flask_login import login_required, current_user
-from flask import current_app, Blueprint
+from flask_login import current_user
+from flask import current_app
 from ..services.ordini_service import OrdiniService
 from dataclasses import asdict
 
 from ..utils.wrapper_login_required import login_required_restx
 
-# Blueprint e Namespace
-bp = Blueprint("ordini", __name__)
+# Namespace
 ordini_ns = Namespace('ordini', description='Operazioni sugli ordini')
 
 # Modelli di risposta

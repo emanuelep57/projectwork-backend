@@ -1,5 +1,5 @@
-from flask import Blueprint, request, current_app
-from flask_login import login_required, current_user
+from flask import request, current_app
+from flask_login import current_user
 from ..services.biglietti_service import BigliettiService
 from ..services.ordini_service import OrdiniService
 from ..models import db
@@ -7,7 +7,6 @@ from flask_restx import Namespace, Resource, fields
 
 from ..utils.wrapper_login_required import login_required_restx
 
-bp = Blueprint('biglietti', __name__)
 biglietti_ns = Namespace('biglietti', description='Operazioni relative ai biglietti')
 
 # Definizione dei modelli per la documentazione

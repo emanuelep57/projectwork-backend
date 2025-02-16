@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import request
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_restx import Namespace, Resource, fields
 from ..models import User
@@ -6,7 +6,6 @@ from .. import db, login_manager
 from flask_login import login_user, current_user, logout_user
 
 
-bp = Blueprint("autenticazione", __name__)
 auth_ns = Namespace("auth", description="Operazioni di autenticazione")
 
 # Definizione dei modelli per la documentazione openAPI

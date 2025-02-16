@@ -1,8 +1,6 @@
-from flask import Blueprint
 from flask_restx import Namespace, Resource, fields
 from ..services.film_service import FilmService
 
-bp = Blueprint('film', __name__)
 film_ns = Namespace('film', description='Operazioni sui film')
 
 # Definizione dei modelli per la documentazione openAPI

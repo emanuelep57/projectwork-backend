@@ -1,10 +1,8 @@
-from flask import Blueprint, jsonify, request
+from flask import request
 from flask_restx import Namespace, Resource, fields
 from ..services.proiezione_service import ProiezioneService
 
-bp = Blueprint('proiezioni', __name__)
 proiezioni_ns = Namespace('proiezioni', description='Operazioni sulle proiezioni')
-
 
 # Definizione dei modelli per la documentazione openAPI
 proiezione_model = proiezioni_ns.model('Proiezione', {
