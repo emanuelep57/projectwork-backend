@@ -1,67 +1,109 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_restx import Namespace, Resource, fields
 from ..models import User
 from .. import db, login_manager
 from flask_login import login_user, current_user, logout_user
 
-bp = Blueprint('autenticazione', __name__)
+
+bp = Blueprint("autenticazione", __name__)
+auth_ns = Namespace("auth", description="Operazioni di autenticazione")
+
+# Definizione dei modelli per la documentazione openAPI
+utente_model = auth_ns.model("Utente", {
+    "id": fields.Integer(description="ID utente"),
+    "email": fields.String(description="Email dell'utente"),
+    "nome": fields.String(description="Nome dell'utente"),
+    "cognome": fields.String(description="Cognome dell'utente"),
+})
+
+registrazione_model = auth_ns.model("Registrazione", {
+    "nome": fields.String(required=True, description="Nome utente"),
+    "cognome": fields.String(required=True, description="Cognome utente"),
+    "email": fields.String(required=True, description="Email utente"),
+    "password": fields.String(required=True, description="Password utente"),
+})
+
+login_model = auth_ns.model("Login", {
+    "email": fields.String(required=True, description="Email utente"),
+    "password": fields.String(required=True, description="Password utente"),
+})
 
 
+# carica l'utente
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))  # Carica l'utente dal DB.
+    return User.query.get(int(user_id))
 
 
-@bp.route('/status')
-def auth_status():
-    if current_user.is_authenticated:
-        return jsonify({
-            'isAuthenticated': True,
-            'user': {
-                'id': current_user.id,
-                'email': current_user.email,
-                'nome': current_user.nome
+@auth_ns.route("/status")
+class AuthStatus(Resource):
+    @auth_ns.response(200, "Successo", utente_model)
+    @auth_ns.response(401, "Non autenticato")
+    def get(self):
+        """Verifica lo stato dell'utente, se autenticato o meno"""
+        if current_user.is_authenticated:
+            return {
+                "isAuthenticated": True,
+                "user": {
+                    "id": current_user.id,
+                    "email": current_user.email,
+                    "nome": current_user.nome,
+                    "cognome": current_user.cognome,
+                },
             }
-        })
-    return jsonify({'isAuthenticated': False}), 401
+        return {"isAuthenticated": False}, 401
 
 
-@bp.route('/register', methods=['POST'])
-def register():
-    data = request.json
-    if User.query.filter_by(email=data['email']).first():  # Controlla email duplicata.
-        return jsonify({'error': 'Email already registered'}), 400
+@auth_ns.route("/registrazione")
+class Registrazione(Resource):
+    @auth_ns.expect(registrazione_model)
+    @auth_ns.response(201, "Utente registrato con successo")
+    @auth_ns.response(400, "Email già registrata")
+    def post(self):
+        """Registra un nuovo utente"""
+        data = request.json
+        if User.query.filter_by(email=data["email"]).first():
+            return {"error": "Email already registrazioneed"}, 400
 
-    user = User(
-        nome=data['nome'],
-        cognome=data['cognome'],
-        email=data['email'],
-        password=generate_password_hash(data['password'])  # Hash password.
-    )
-    db.session.add(user)  # Aggiunge utente.
-    db.session.commit()  # Salva nel DB.
-    return jsonify({'message': 'User registered successfully'}), 201
+        user = User(
+            nome=data["nome"],
+            cognome=data["cognome"],
+            email=data["email"],
+            password=generate_password_hash(data["password"]),
+        )
+        db.session.add(user)
+        db.session.commit()
+        return {"message": "User registrazioneed successfully"}, 201
 
 
-# Login utente.
-@bp.route('/login', methods=['POST'])
-def login():
-    data = request.json
-    user = User.query.filter_by(email=data['email']).first()
-    if user and check_password_hash(user.password, data['password']):  # Controlla credenziali.
-        login_user(user)
-        return jsonify({
-            'message': 'Logged in successfully',
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'nome': user.nome
+@auth_ns.route("/login")
+class Login(Resource):
+    @auth_ns.expect(login_model)
+    @auth_ns.response(200, "Login effettuato con successo", utente_model)
+    @auth_ns.response(401, "Credenziali non valide")
+    def post(self):
+        """Effettua il login dell'utente"""
+        data = request.json
+        user = User.query.filter_by(email=data["email"]).first()
+        if user and check_password_hash(user.password, data["password"]):
+            login_user(user)
+            return {
+                "message": "Logged in successfully",
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "nome": user.nome,
+                    "cognome": user.cognome,
+                },
             }
-        })
-    return jsonify({'error': 'Invalid credentials'}), 401
+        return {"error": "Invalid credentials"}, 401
 
 
-@bp.route('/logout', methods=['POST'])
-def logout():
-    logout_user()  # Questa funzione di Flask-Login rimuove la sessione
-    return jsonify({'message': 'Logged out successfully'})
+@auth_ns.route("/logout")
+class Logout(Resource):
+    @auth_ns.response(200, "Logout effettuato con successo")
+    def post(self):
+        """Effettua il logout dell'utente"""
+        logout_user()
+        return {"message": "Logged out successfully"}, 200

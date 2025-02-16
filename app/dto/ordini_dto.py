@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Optional, List
-
 from app.dto.biglietto_dto import BigliettoDTO
 
 
@@ -30,3 +29,12 @@ class OrdineDTO:
                 for ticket, posto in biglietti
             ]
         )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'data_acquisto': self.data_acquisto,
+            'pdf_url': self.pdf_url,
+            'proiezione': self.proiezione,
+            'biglietti': [biglietto.to_dict() for biglietto in self.biglietti]
+        }

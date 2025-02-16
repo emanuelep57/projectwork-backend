@@ -4,16 +4,16 @@ from typing import List, Optional
 
 @dataclass
 class PostoInBigliettoDTO:
-    id: int
+    id_posto: int
     fila: str
     numero: int
-    nome_ospite: Optional[str]
-    cognome_ospite: Optional[str]
+    nome_ospite: Optional[str] = None
+    cognome_ospite: Optional[str] = None
 
     @classmethod
     def from_model(cls, posto, biglietto):
         return cls(
-            id=posto.id,
+            id_posto=posto.id,
             fila=posto.fila,
             numero=posto.numero,
             nome_ospite=biglietto.nome_ospite,
@@ -23,24 +23,36 @@ class PostoInBigliettoDTO:
 
 @dataclass
 class BigliettoDTO:
-    id_biglietto: int
-    film_titolo: str
-    film_copertina: str
-    sala_nome: str
-    data_ora: str
-    costo: float
-    posti: List[PostoInBigliettoDTO]
-    pdf_url: Optional[str]
+    id: int
+    posti: List[dict]  # Assicuriamoci che sia sempre una lista di posti
+    nome_ospite: Optional[str] = None
+    cognome_ospite: Optional[str] = None
 
     @classmethod
     def from_models(cls, ticket, film, proiezione, sala, ordine, posto):
+        # Assicuriamoci che posto sia sempre una lista
+        posti_list = [posto] if not isinstance(posto, list) else posto
+
+        # Convertiamo ogni posto in un dizionario con i dati necessari
+        posti_dict = [{
+            'id': p.id,
+            'fila': p.fila,
+            'numero': p.numero,
+            'nome_ospite': ticket.nome_ospite,
+            'cognome_ospite': ticket.cognome_ospite
+        } for p in posti_list]
+
         return cls(
-            id_biglietto=ticket.id,
-            film_titolo=film.titolo,
-            film_copertina=film.url_copertina,
-            sala_nome=sala.nome,
-            data_ora=proiezione.data_ora.isoformat(),
-            costo=float(proiezione.costo),
-            posti=[PostoInBigliettoDTO.from_model(posto, ticket)],
-            pdf_url=ordine.pdf_url
+            id=ticket.id,
+            posti=posti_dict,
+            nome_ospite=ticket.nome_ospite,
+            cognome_ospite=ticket.cognome_ospite
         )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'posti': self.posti,
+            'nome_ospite': self.nome_ospite,
+            'cognome_ospite': self.cognome_ospite
+        }
