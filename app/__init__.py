@@ -9,7 +9,6 @@ from flask_restx import Api
 import json
 from decimal import Decimal
 
-
 # caricamento del file dotenv
 load_dotenv()
 
@@ -40,7 +39,7 @@ def create_app():
     # CORS configuration
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["projectwork-frontend.vercel.app"],
+            "origins": ["https://projectwork-frontend.vercel.app"],  # Note the https:// added
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
             "supports_credentials": True,
@@ -65,4 +64,3 @@ def create_app():
     api.add_namespace(posti.posti_ns, path='/api/posti')
 
     return app
-
