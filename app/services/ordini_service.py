@@ -13,10 +13,10 @@ from ..utils.cloudinary_utils import upload_pdf_to_cloudinary
 
 class OrdiniService:
     @staticmethod
-    def create_order(user_id: int, projection_id: int) -> Ordine:
+    def crea_ordine(user_id, id_proiezione) -> Ordine:
         ordine = Ordine(
             id_utente=user_id,
-            id_proiezione=projection_id,
+            id_proiezione=id_proiezione,
             data_acquisto=datetime.now()
         )
         db.session.add(ordine)
@@ -71,7 +71,7 @@ class OrdiniService:
             return []
 
     @staticmethod
-    def elimina_ordine(ordine_id: int, user_id: int) -> None:
+    def elimina_ordine(ordine_id, user_id):
         ordine = Ordine.query.filter(
             and_(
                 Ordine.id == ordine_id,
@@ -138,7 +138,7 @@ class OrdiniService:
         return pdf_url
 
     @staticmethod
-    def rimuovi_posto(ordine_id: int, user_id: int, id_posto: int) -> str:
+    def rimuovi_posto(ordine_id, user_id, id_posto) -> str:
         ordine = Ordine.query.filter(
             and_(
                 Ordine.id == ordine_id,
@@ -178,7 +178,7 @@ class OrdiniService:
         return pdf_url
 
     @staticmethod
-    def _genera_pdf_ordine(ordine_id: int) -> str:
+    def _genera_pdf_ordine(ordine_id):
         tickets_info = (
             db.session.query(Biglietto, Film, Proiezione, Sala, Posto)
             .join(Proiezione, Biglietto.id_proiezione == Proiezione.id)
@@ -190,4 +190,4 @@ class OrdiniService:
         )
 
         pdf_buffer = genera_biglietto_pdf(tickets_info, ordine_id)
-        return upload_pdf_to_cloudinary(pdf_buffer, f"ticket{ordine_id}{datetime.now()}")
+        return upload_pdf_to_cloudinary(pdf_buffer, f"biglietto{ordine_id}{datetime.now()}")

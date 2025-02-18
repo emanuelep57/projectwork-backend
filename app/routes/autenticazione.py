@@ -63,7 +63,7 @@ class Registrazione(Resource):
         """Registra un nuovo utente"""
         data = request.json
         if User.query.filter_by(email=data["email"]).first():
-            return {"error": "Email already registrazioneed"}, 400
+            return {"errore": "Email già registrata"}, 400
 
         user = User(
             nome=data["nome"],
@@ -73,7 +73,7 @@ class Registrazione(Resource):
         )
         db.session.add(user)
         db.session.commit()
-        return {"message": "User registrazioneed successfully"}, 201
+        return {"messaggio": "Registrazione avvenuta con successo"}, 201
 
 
 @auth_ns.route("/login")
@@ -88,7 +88,7 @@ class Login(Resource):
         if user and check_password_hash(user.password, data["password"]):
             login_user(user)
             return {
-                "message": "Logged in successfully",
+                "messaggio": "Log in avvenuto con successo",
                 "user": {
                     "id": user.id,
                     "email": user.email,
@@ -96,7 +96,7 @@ class Login(Resource):
                     "cognome": user.cognome,
                 },
             }
-        return {"error": "Invalid credentials"}, 401
+        return {"errore": "Credenziali non valide"}, 401
 
 
 @auth_ns.route("/logout")
@@ -105,4 +105,4 @@ class Logout(Resource):
     def post(self):
         """Effettua il logout dell'utente"""
         logout_user()
-        return {"message": "Logged out successfully"}, 200
+        return {"message": "Logout avvenuto con successo"}, 200

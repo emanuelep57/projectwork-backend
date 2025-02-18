@@ -23,7 +23,7 @@ class ProiezioneList(Resource):
         """Recupera le proiezioni future di un film specifico"""
         film_id = request.args.get('film_id', type=int)
         if film_id is None:
-            return {'errore': 'L\id del film non è presente'}, 400
+            return {'errore': 'L\'id del film non è presente'}, 400
 
         try:
             proiezioni = ProiezioneService.get_proiezioni(film_id)

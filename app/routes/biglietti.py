@@ -22,7 +22,7 @@ acquisto_biglietto_input = biglietti_ns.model('AcquistoBigliettoInput', {
 })
 
 acquisto_biglietto_output = biglietti_ns.model('AcquistoBigliettoOutput', {
-    'ticket_ids': fields.List(fields.Integer, description='Lista degli ID dei biglietti acquistati'),
+    'id_biglietti': fields.List(fields.Integer, description='Lista degli ID dei biglietti acquistati'),
     'pdf_urls': fields.List(fields.String, description='URL del PDF del biglietto')
 })
 
@@ -46,12 +46,12 @@ class AcquistoBiglietto(Resource):
             return {'errore': 'I dati in input non sono validi'}, 400
 
         try:
-            ordine = OrdiniService.create_order(
+            ordine = OrdiniService.crea_ordine(
                 user_id=current_user.id,
-                projection_id=data['id_proiezione']
+                id_proiezione=data['id_proiezione']
             )
 
-            ticket_ids, pdf_url = BigliettiService.acquista_biglietto(
+            id_biglietti, pdf_url = BigliettiService.acquista_biglietto(
                 current_user.id,
                 data['id_proiezione'],
                 data['biglietti'],
@@ -62,11 +62,11 @@ class AcquistoBiglietto(Resource):
             db.session.commit()
 
             return {
-                'ticket_ids': ticket_ids,
+                'id_biglietti': id_biglietti,
                 'pdf_urls': [pdf_url]
             }, 200
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Errore durante l\'acqusito: {str(e)}")
-            return {'error': str(e)}, 500
+            return {'errore': str(e)}, 500
