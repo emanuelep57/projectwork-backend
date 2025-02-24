@@ -114,8 +114,7 @@ def genera_biglietto_pdf(info_biglietti, id_ordine):
 
         # Siccome il primo biglietto non è mai dell'ospite, sarà sempe dell'utente
         # Per quelli che seguono invece se ci sono ospiti, prenderà prima loro.
-        nome_ospite = f"{biglietto.nome_ospite or current_user.nome} {biglietto.cognome_ospite 
-                                                                      or current_user.cognome}"
+        nome_ospite = f"{biglietto.nome_ospite or current_user.nome} {biglietto.cognome_ospite or current_user.cognome}"
 
         # Aggiunta dei dettagli del biglietto
         contenuto_pagina.extend([
@@ -140,6 +139,6 @@ def genera_biglietto_pdf(info_biglietti, id_ordine):
         current_app.logger.error(f"Errore nella generazione del PDF: {e}")
         raise ValueError("Errore durante la creazione del PDF.")
 
-    #seek riporta il cursore del buffer all'inizio.
+    # seek riporta il cursore del buffer all'inizio.
     buffer_pdf.seek(0)
     return buffer_pdf
