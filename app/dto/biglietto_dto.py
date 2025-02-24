@@ -28,12 +28,15 @@ class BigliettoDTO:
     nome_ospite: Optional[str] = None
     cognome_ospite: Optional[str] = None
 
+    # qui ho reso film, proiezione, sala e ordine opzionali
     @classmethod
-    def from_models(cls, ticket, film, proiezione, sala, ordine, posto):
+    def from_models(cls, ticket, film=None, proiezione=None, sala=None, ordine=None, posto=None):
+
+        if posto is None:
+            raise ValueError("posto parameter is required")
 
         posti_list = [posto] if not isinstance(posto, list) else posto
 
-        # Converto ogni posto in un dizionario con i dati necessari
         posti_dict = [{
             'id': p.id,
             'fila': p.fila,
