@@ -12,6 +12,7 @@ GenereFilm = ENUM(
     create_type=True
 )
 
+
 class Film(db.Model):
     __tablename__ = 'film'
     id = db.Column('id_film', db.Integer, primary_key=True)
@@ -27,6 +28,7 @@ class Film(db.Model):
     __table_args__ = (
         Index('idx_film_titolo', 'titolo'),
     )
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'utente'
@@ -49,6 +51,7 @@ class User(UserMixin, db.Model):
         self.email = email
         self.password = password
 
+
 class Sala(db.Model):
     __tablename__ = 'sala'
     id = db.Column('id_sala', db.Integer, primary_key=True)
@@ -57,6 +60,7 @@ class Sala(db.Model):
 
     proiezioni = db.relationship('Proiezione', back_populates='sala', cascade='all, delete-orphan')
     posti = db.relationship('Posto', back_populates='sala', cascade='all, delete-orphan')
+
 
 class Proiezione(db.Model):
     __tablename__ = 'proiezione'
@@ -76,6 +80,7 @@ class Proiezione(db.Model):
         Index('idx_proiezione_data', 'data_ora'),
     )
 
+
 class Ordine(db.Model):
     __tablename__ = 'ordine'
     id = db.Column('id_ordine', db.Integer, primary_key=True)
@@ -93,6 +98,7 @@ class Ordine(db.Model):
         Index('idx_ordine_proiezione', 'id_proiezione'),
     )
 
+
 class Biglietto(db.Model):
     __tablename__ = 'biglietto'
     id = db.Column('id_biglietto', db.Integer, primary_key=True)
@@ -103,7 +109,6 @@ class Biglietto(db.Model):
     nome_ospite = db.Column(db.String(50))
     cognome_ospite = db.Column(db.String(50))
 
-
     proiezione = db.relationship('Proiezione', back_populates='biglietti')
     utente = db.relationship('User', back_populates='biglietti')
     posto = db.relationship('Posto', back_populates='biglietti')
@@ -113,6 +118,7 @@ class Biglietto(db.Model):
         Index('idx_biglietto_proiezione', 'id_proiezione'),
         Index('idx_biglietto_utente', 'id_utente'),
     )
+
 
 class Posto(db.Model):
     __tablename__ = 'posto'

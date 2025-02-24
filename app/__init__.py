@@ -39,9 +39,10 @@ def create_app():
     # CORS configuration
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["https://projectwork-frontend.vercel.app"],  # Note the https:// added
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+            "origins": ["https://projectwork-frontend.vercel.app"],
+            "methods": ["GET", "POST", "DELETE"],
+            "allow_headers": ["Content-Type", "Authorization", "Accept",
+                              "Origin", "X-Requested-With"],
             "supports_credentials": True,
             "expose_headers": ["Content-Type", "Authorization"],
             "max_age": 3600

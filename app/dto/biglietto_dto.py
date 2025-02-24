@@ -24,16 +24,15 @@ class PostoInBigliettoDTO:
 @dataclass
 class BigliettoDTO:
     id: int
-    posti: List[dict]  # Assicuriamoci che sia sempre una lista di posti
+    posti: List[dict]
     nome_ospite: Optional[str] = None
     cognome_ospite: Optional[str] = None
 
     @classmethod
-    def from_models(cls, ticket, film, proiezione, sala, ordine, posto):
-        # Assicuriamoci che posto sia sempre una lista
-        posti_list = [posto] if not isinstance(posto, list) else posto
+    def from_models(cls, ticket, posto):
 
-        # Convertiamo ogni posto in un dizionario con i dati necessari
+        posti_list = [posto] if not isinstance(posto, list) else posto
+        # Converto ogni posto in un dizionario con i dati necessari
         posti_dict = [{
             'id': p.id,
             'fila': p.fila,

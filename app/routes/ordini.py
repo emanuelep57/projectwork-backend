@@ -1,10 +1,8 @@
 from flask_restx import Namespace, Resource, fields
-from flask_login import current_user
+from flask_login import current_user, login_required
 from flask import current_app
 from ..services.ordini_service import OrdiniService
 from dataclasses import asdict
-
-from ..utils.wrapper_login_required import login_required_restx
 
 # Namespace
 ordini_ns = Namespace('ordini', description='Operazioni sugli ordini')
@@ -42,7 +40,7 @@ risposta_errore = ordini_ns.model('RispostaErrore', {
 class ListaOrdini(Resource):
     @ordini_ns.response(200, 'Successo', risposta_ordine)
     @ordini_ns.response(500, 'Errore interno del server', risposta_errore)
-    @login_required_restx
+    @login_required
     def get(self):
         """Recupera tutti gli ordini dell'utente"""
         try:
@@ -60,7 +58,7 @@ class Ordine(Resource):
     @ordini_ns.response(200, 'Successo')
     @ordini_ns.response(400, 'Dati in input non validi', risposta_errore)
     @ordini_ns.response(500, 'Errore interno del server', risposta_errore)
-    @login_required_restx
+    @login_required
     def delete(self, ordine_id):
         """Elimina un ordine specifico"""
         try:
@@ -80,7 +78,7 @@ class AggiungiBiglietti(Resource):
     @ordini_ns.response(200, 'Successo', risposta_pdf)
     @ordini_ns.response(400, 'Dati in input non validi', risposta_errore)
     @ordini_ns.response(500, 'Errore interno del server', risposta_errore)
-    @login_required_restx
+    @login_required
     def post(self, ordine_id):
         """Aggiunge biglietti a un ordine esistente"""
         try:
@@ -107,7 +105,7 @@ class RimuoviPosto(Resource):
     @ordini_ns.response(200, 'Successo', risposta_pdf)
     @ordini_ns.response(400, 'Dati in input non validi', risposta_errore)
     @ordini_ns.response(500, 'Errore interno del server', risposta_errore)
-    @login_required_restx
+    @login_required
     def post(self, ordine_id):
         """Rimuove un posto da un ordine esistente"""
         try:

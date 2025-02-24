@@ -1,11 +1,9 @@
 from flask import request, current_app
-from flask_login import current_user
+from flask_login import current_user, login_required
 from ..services.biglietti_service import BigliettiService
 from ..services.ordini_service import OrdiniService
 from ..models import db
 from flask_restx import Namespace, Resource, fields
-
-from ..utils.wrapper_login_required import login_required_restx
 
 biglietti_ns = Namespace('biglietti', description='Operazioni relative ai biglietti')
 
@@ -33,7 +31,7 @@ error_model = biglietti_ns.model('Error', {
 
 @biglietti_ns.route('/acquisto')
 class AcquistoBiglietto(Resource):
-    @login_required_restx
+    @login_required
     @biglietti_ns.doc(description='Acquista uno o più biglietti per una proiezione')
     @biglietti_ns.expect(acquisto_biglietto_input)
     @biglietti_ns.response(200, 'Successo', acquisto_biglietto_output)
