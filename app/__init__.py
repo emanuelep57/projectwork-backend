@@ -36,11 +36,15 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['RESTX_JSON'] = {'cls': DecimalEncoder}
 
+    # Configurazione dei cookie di sessione
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+    app.config['SESSION_COOKIE_SECURE'] = True
+
     # CORS configuration
     CORS(app, resources={
         r"/api/*": {
             "origins": ["https://projectwork-frontend.vercel.app"],
-            "methods": ["GET", "POST", "DELETE"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "Accept",
                               "Origin", "X-Requested-With"],
             "supports_credentials": True,
